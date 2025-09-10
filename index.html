@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>UGC NET English Literature Flash Info</title>
+  <title>UGC NET English Literature Flash Info with Chapter Keywords Map</title>
   <style>
     :root {
       --dark-red: #b8483c;
@@ -105,6 +105,8 @@
       border-radius: 6px;
       border: 1px solid var(--brown);
       box-shadow: 1px 1px 4px #8884;
+      max-width: 100%;
+      height: auto;
     }
     a {
       color: var(--dark-red);
@@ -134,7 +136,7 @@
 <button id="nextBtn" disabled>Show Another Random Info</button>
 
 <script>
-  // CSV URL with output=csv for actual csv content
+  // CSV URL - use CSV export link (output=csv)
   const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7cWnraaDNjm3MW4tUeVrVftj6iEBYwNkGZ7WsJsQfte3rbRhr1AF43fbIyVe1-ZMtvRVZgDrwusrT/pub?output=csv';
 
   const moduleSelect = document.getElementById('moduleSelect');
@@ -146,7 +148,18 @@
   let filteredRows = [];
   let lastIndex = -1;
 
-  // CSV parser, simple split by commas assuming no commas inside fields; update if needed for quotes
+  // Map of Important Keywords per Module|Chapter key
+  // Customize this map as needed; keys should be Module + "|" + Chapter exactly matching sheet
+  const chapterKeywordsMap = {
+    "British Literature|Old & Middle English": [
+      "Old & Middle English",
+      "Anglo-Saxon",
+      "Anglo-Norman"
+    ],
+    // Add other module|chapter keys and keyword arrays here
+  };
+
+  // CSV parser - simple split by commas (update if complex CSV)
   function parseCSV(text) {
     const lines = text.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
@@ -160,7 +173,7 @@
     });
   }
 
-  // Extract unique items from array
+  // Unique values from array
   function uniqueArray(arr) {
     return [...new Set(arr.filter(s => s && s.length > 0))];
   }
@@ -178,7 +191,7 @@
     contentDiv.textContent = "Please select a module and chapter to view info.";
   }
 
-  // Populate Chapters dropdown filtered by selected module
+  // Populate Chapters dropdown filtered by module
   function populateChapters(moduleName) {
     if (!moduleName) {
       chapterSelect.innerHTML = `<option value="">-- Select Module first --</option>`;
@@ -197,7 +210,7 @@
     contentDiv.textContent = "Please select a chapter to view info.";
   }
 
-  // Clean keywords: split by semicolon, trim, remove years in parentheses
+  // Clean keywords: split by semicolon, trim spaces, remove years in parentheses
   function parseKeywords(str) {
     if (!str) return [];
     return str
@@ -206,21 +219,20 @@
       .filter(s => s.length > 0);
   }
 
-  // Compose keywords from AuthorName, Important Keywords, Works columns
+  // Compose combined keywords for a row:
+  // From chapterKeywordsMap + AuthorName (exclude 'Anonymous') + Works
   function composeKeywordList(row) {
-    const list = [];
-    if (row.AuthorName) list.push(row.AuthorName.trim());
-    if (row['Important Keywords']) {
-      list.push(...parseKeywords(row['Important Keywords']));
-    }
-    if (row.Works) {
-      list.push(...parseKeywords(row.Works));
-    }
-    // Deduplicate list
-    return uniqueArray(list);
+    const key = `${row.Module}|${row.Chapters}`;
+    const chapterKw = chapterKeywordsMap[key] || [];
+    const worksKw = row.Works ? parseKeywords(row.Works) : [];
+    const authorName = (row.AuthorName && row.AuthorName.toLowerCase() !== 'anonymous') ? [row.AuthorName.trim()] : [];
+    // Combine all
+    let combined = [...chapterKw, ...authorName, ...worksKw];
+    // Remove duplicates
+    return uniqueArray(combined);
   }
 
-  // Fetch Wikipedia extract for given title
+  // Fetch Wikipedia extract for a title
   async function fetchWikipediaExtract(title) {
     if (!title) return null;
     const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(title)}`;
@@ -236,7 +248,7 @@
     }
   }
 
-  // Show random flash info for filtered rows in selected chapter
+  // Show random flash info based on filteredRows
   async function showRandomInfo() {
     if (filteredRows.length === 0) {
       contentDiv.textContent = "No data for selected module and chapter.";
@@ -249,18 +261,16 @@
     } else {
       do {
         idx = Math.floor(Math.random() * filteredRows.length);
-      } while (idx === lastIndex);
+      } while (idx === lastIndex && filteredRows.length > 1);
     }
     lastIndex = idx;
     const row = filteredRows[idx];
-
     const keywords = composeKeywordList(row);
     if (keywords.length === 0) {
       contentDiv.textContent = "No keywords found for the selected entry.";
       return;
     }
     contentDiv.textContent = "Loading Wikipedia data...";
-    // Try fetching extracts from keywords, stop at first success
     for (const kw of keywords) {
       const extract = await fetchWikipediaExtract(kw);
       if (extract) {
@@ -268,7 +278,7 @@
           <img src="${row.ImageURL}" alt="${row.AuthorName}" class="thumb" />
           <h2>${kw}</h2>
           <p>${extract}</p>
-          <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(kw)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a></p>`;
+          <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(kw)}" target="_blank">Read more on Wikipedia</a></p>`;
         nextBtn.disabled = false;
         return;
       }
@@ -279,7 +289,6 @@
 
   // EVENT LISTENERS
 
-  // Module select changed
   moduleSelect.addEventListener('change', () => {
     const mod = moduleSelect.value;
     populateChapters(mod);
@@ -289,13 +298,12 @@
     lastIndex = -1;
   });
 
-  // Chapter select changed
   chapterSelect.addEventListener('change', () => {
-    const module = moduleSelect.value;
-    const chapter = chapterSelect.value;
-    if (module && chapter) {
-      filteredRows = dataRows.filter(r => r.Module === module && r.Chapters === chapter);
-      contentDiv.textContent = "Ready to show flash info. Click 'Show Another Random Info'.";
+    const mod = moduleSelect.value;
+    const chap = chapterSelect.value;
+    if (mod && chap) {
+      filteredRows = dataRows.filter(r => r.Module === mod && r.Chapters === chap);
+      contentDiv.textContent = "Ready. Click 'Show Another Random Info'.";
       nextBtn.disabled = filteredRows.length === 0;
       lastIndex = -1;
     } else {
@@ -306,25 +314,21 @@
     }
   });
 
-  // Next button clicked to show random info
-  nextBtn.addEventListener('click', () => {
-    showRandomInfo();
-  });
+  nextBtn.addEventListener('click', showRandomInfo);
 
-  // FETCH CSV AND INITIALIZE
+  // LOAD CSV AND INITIALIZE
   fetch(csvUrl)
-    .then(r => r.text())
+    .then(res => res.text())
     .then(text => {
       dataRows = parseCSV(text);
       populateModules();
     })
     .catch(() => {
-      contentDiv.textContent = "Failed to load syllabus data.";
+      contentDiv.textContent = "Failed to load data.";
       moduleSelect.innerHTML = '<option>Error loading data</option>';
       chapterSelect.innerHTML = '<option>Error loading data</option>';
       nextBtn.disabled = true;
     });
-
 </script>
 
 </body>
