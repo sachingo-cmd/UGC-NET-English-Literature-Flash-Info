@@ -134,10 +134,9 @@
     const lines = text.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
     return lines.slice(1).map(line => {
-      // Handles commas without quotes - make sure new CSV avoids commas inside fields
       const cols = line.split(',').map(c => c.trim());
       let obj = {};
-      headers.forEach((header,idx) => {
+      headers.forEach((header, idx) => {
         obj[header] = cols[idx] || '';
       });
       return obj;
@@ -173,11 +172,14 @@
 
   async function fetchWikipediaExtract(titlesCsv) {
     if (!titlesCsv) return 'No Wiki title provided.';
-    const titlesArray = titlesCsv.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    const titlesArray = titlesCsv
+      .split(',')
+      .map(t => t.trim().replace(/^"+|"+$/g, '')) // Remove surrounding quotes here
+      .filter(t => t.length > 0);
     if (titlesArray.length === 0) return 'No valid Wiki titles found.';
     const randomTitle = titlesArray[Math.floor(Math.random() * titlesArray.length)];
     const extract = await fetchWikipediaExtractSingle(randomTitle);
-    return {title: randomTitle, extract: extract || `No extract found for "${randomTitle}".`};
+    return { title: randomTitle, extract: extract || `No extract found for "${randomTitle}".` };
   }
 
   function randomIndexExcept(length, except) {
@@ -200,7 +202,7 @@
     }
     contentDiv.textContent = "Loading...";
     try {
-      const {title, extract} = await fetchWikipediaExtract(topic['WikiTitles']);
+      const { title, extract } = await fetchWikipediaExtract(topic['WikiTitles']);
       if (!title || !extract) {
         contentDiv.textContent = "Could not find valid Wikipedia data for selected topic.";
         return;
