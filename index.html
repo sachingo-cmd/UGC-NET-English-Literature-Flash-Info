@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>UGC NET English Literature Flash Info with Search</title>
-  <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Wikipedia-logo-v2-en.svg/32px-Wikipedia-logo-v2-en.svg.png" />
+  <title>UGC NET English Literature Flash Info</title>
   <style>
     :root {
       --dark-red: #b8483c;
@@ -17,8 +16,8 @@
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 700px;
-      margin: 2rem auto;
+      max-width: 800px;
+      margin: 1rem auto;
       background-color: var(--background);
       color: var(--text-color);
       padding: 1rem;
@@ -27,7 +26,7 @@
       color: var(--dark-red);
       font-weight: bold;
       text-align: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
       text-shadow: 1px 1px 2px rgba(200, 200, 200, 0.6);
     }
     label {
@@ -35,67 +34,77 @@
       font-weight: 600;
       margin-bottom: 0.5rem;
       color: var(--mustard);
+      user-select: none;
     }
-    select, button, input {
+    select, button {
       padding: 0.5rem 1rem;
       font-size: 1rem;
       border: 2px solid var(--sage);
       border-radius: 6px;
-      margin: 0.5rem 0 1.5rem;
+      margin: 0.5rem 0 1rem 0;
       outline: none;
       font-weight: 600;
       user-select: none;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
       width: 100%;
       box-sizing: border-box;
+      cursor: pointer;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
-    select, input {
-      color: var(--text-color);
+    select {
       background-color: #fff;
-      cursor: text;
+      color: var(--text-color);
+      cursor: pointer;
     }
-    select:focus, input:focus {
+    select:focus {
       border-color: var(--mustard);
       box-shadow: 0 0 5px var(--mustard);
     }
     button {
       background-color: var(--mustard);
       color: var(--button-text-light);
-      cursor: pointer;
       border-color: var(--mustard);
     }
     button:disabled {
-      background-color: #cccccc;
+      background-color: #ccc;
+      border-color: #ccc;
       cursor: not-allowed;
-      color: #666666;
-      border-color: #cccccc;
+      color: #666;
     }
     button:hover:not(:disabled) {
       background-color: var(--dark-red);
       border-color: var(--dark-red);
-      color: var(--button-text-light);
     }
     #content {
       background-color: var(--sage);
       border-radius: 8px;
-      padding: 1.5rem;
-      min-height: 200px;
-      line-height: 1.6;
+      padding: 1rem 1.5rem 1.5rem 1.5rem;
+      min-height: 250px;
+      line-height: 1.5;
       color: var(--charcoal);
-      box-shadow: 0 4px 8px rgba(60, 57, 62, 0.2);
       font-size: 1rem;
-      max-height: 500px;
+      box-shadow: 0 4px 8px rgba(60, 57, 62, 0.15);
       overflow-y: auto;
+      max-height: 500px;
       user-select: text;
+      position: relative;
     }
     h2 {
       color: var(--dark-red);
       margin-top: 0;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
       font-weight: 700;
     }
     p {
       margin-bottom: 1rem;
+      white-space: pre-wrap;
+    }
+    img.thumb {
+      max-height: 150px;
+      display: block;
+      margin: 0.25rem 0 1.0rem 0;
+      border-radius: 6px;
+      border: 1px solid var(--brown);
+      box-shadow: 1px 1px 4px #8884;
     }
     a {
       color: var(--dark-red);
@@ -105,278 +114,217 @@
     a:hover, a:focus {
       text-decoration: underline;
     }
-    /* Search Suggestions List */
-    #searchResults {
-      border: 1px solid var(--sage);
-      border-radius: 6px;
-      max-height: 200px;
-      overflow-y: auto;
-      background: white;
-      color: black;
-      margin-top: -1rem;
-      margin-bottom: 1rem;
-      position: relative;
-      z-index: 1000;
-    }
-    #searchResults div {
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-    }
-    #searchResults div:hover, #searchResults .selected {
-      background-color: var(--mustard);
-      color: var(--button-text-light);
-    }
   </style>
 </head>
 <body>
 
-<h1>UGC NET English Literature Flash Info with Search</h1>
+<h1>UGC NET English Literature Flash Info</h1>
 
-<label for="searchInput">Search Wikipedia Keywords</label>
-<input type="text" id="searchInput" placeholder="Type your keyword here..." autocomplete="off" />
-<div id="searchResults" style="display:none;"></div>
-
-<label for="chapterSelect">Or select a chapter:</label>
-<select id="chapterSelect">
-  <option value="">-- Loading chapters... --</option>
+<label for="moduleSelect">Select Module</label>
+<select id="moduleSelect">
+  <option value="">-- Loading modules... --</option>
 </select>
 
-<div id="content">Please select a chapter or use search to start.</div>
+<label for="chapterSelect">Select Chapter</label>
+<select id="chapterSelect" disabled>
+  <option value="">-- Select module first --</option>
+</select>
+
+<div id="content">Please select a module and chapter to view info.</div>
 <button id="nextBtn" disabled>Show Another Random Info</button>
 
 <script>
-  // CSV URL for syllabus
-  const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQVAyv3-UtQHUqoMbqDq92CcuSUO5tUEZl6DMg9OlD7cETGvgw5yyBGLJJdyyXDFCRmUW8ZbmzJRbH1/pub?output=csv';
+  // CSV URL with output=csv for actual csv content
+  const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7cWnraaDNjm3MW4tUeVrVftj6iEBYwNkGZ7WsJsQfte3rbRhr1AF43fbIyVe1-ZMtvRVZgDrwusrT/pub?output=csv';
 
+  const moduleSelect = document.getElementById('moduleSelect');
   const chapterSelect = document.getElementById('chapterSelect');
   const contentDiv = document.getElementById('content');
   const nextBtn = document.getElementById('nextBtn');
-  const searchInput = document.getElementById('searchInput');
-  const searchResults = document.getElementById('searchResults');
 
-  let syllabusData = [];
-  let currentTopicList = [];
+  let dataRows = [];
+  let filteredRows = [];
   let lastIndex = -1;
 
-  // Parse CSV into array of objects
+  // CSV parser, simple split by commas assuming no commas inside fields; update if needed for quotes
   function parseCSV(text) {
     const lines = text.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim());
     return lines.slice(1).map(line => {
       const cols = line.split(',').map(c => c.trim());
       let obj = {};
-      headers.forEach((header, idx) => {
-        obj[header] = cols[idx] || '';
+      headers.forEach((h, i) => {
+        obj[h] = cols[i] || '';
       });
       return obj;
     });
   }
 
-  // Load syllabus & fill chapter dropdown
-  fetch(csvUrl)
-    .then(response => response.text())
-    .then(text => {
-      syllabusData = parseCSV(text);
-      const chapters = [...new Set(syllabusData.map(row => row.Chapter))];
-      chapterSelect.innerHTML = '<option value="">-- Select a Chapter --</option>';
-      chapters.forEach(chap => {
-        chapterSelect.innerHTML += `<option value="${chap}">${chap}</option>`;
-      });
-    })
-    .catch(() => {
-      chapterSelect.innerHTML = '<option value="">Error loading syllabus</option>';
-      contentDiv.textContent = 'Could not load syllabus data.';
+  // Extract unique items from array
+  function uniqueArray(arr) {
+    return [...new Set(arr.filter(s => s && s.length > 0))];
+  }
+
+  // Populate Module dropdown with unique modules
+  function populateModules() {
+    const modules = uniqueArray(dataRows.map(r => r.Module));
+    moduleSelect.innerHTML = '<option value="">-- Select Module --</option>';
+    modules.forEach(mod => {
+      moduleSelect.innerHTML += `<option value="${mod}">${mod}</option>`;
     });
-
-  // Fetch Wikipedia extract given a title
-  async function fetchWikipediaExtractSingle(title) {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(title)}`;
-    const resp = await fetch(url);
-    const data = await resp.json();
-    const pages = data.query.pages;
-    const pageId = Object.keys(pages)[0];
-    if (pageId === "-1") return null;
-    return pages[pageId].extract || null;
+    chapterSelect.innerHTML = `<option value="">-- Select Module first --</option>`;
+    chapterSelect.disabled = true;
+    nextBtn.disabled = true;
+    contentDiv.textContent = "Please select a module and chapter to view info.";
   }
 
-  // Fetch Wikipedia extract for random title from CSV wiki titles list
-  async function fetchWikipediaExtract(titlesCsv) {
-    if (!titlesCsv) return {title: null, extract: 'No Wiki title provided.'};
-    const titlesArray = titlesCsv
-      .split(',')
-      .map(t => t.trim().replace(/^"+|"+$/g,''))
-      .filter(t => t.length > 0);
-    if (titlesArray.length === 0) return {title: null, extract: 'No valid Wiki titles found.'};
-
-    // Try random picks with fallback if no extract found
-    const usedIndices = new Set();
-    while(usedIndices.size < titlesArray.length) {
-      const randIndex = Math.floor(Math.random() * titlesArray.length);
-      if (usedIndices.has(randIndex)) continue;
-      usedIndices.add(randIndex);
-      const title = titlesArray[randIndex];
-      const extract = await fetchWikipediaExtractSingle(title);
-      if (extract) return {title, extract};
-    }
-    return {title: null, extract: 'No extract found for any provided titles.'};
-  }
-
-  // Show random Wikipedia info from current list
-  async function showRandomInfo() {
-    if (!currentTopicList.length) return;
-    const idx = randomIndexExcept(currentTopicList.length, lastIndex);
-    lastIndex = idx;
-    const topic = currentTopicList[idx];
-    if (!topic['WikiTitles']) {
-      contentDiv.textContent = "No Wiki Titles available for this topic.";
+  // Populate Chapters dropdown filtered by selected module
+  function populateChapters(moduleName) {
+    if (!moduleName) {
+      chapterSelect.innerHTML = `<option value="">-- Select Module first --</option>`;
+      chapterSelect.disabled = true;
+      nextBtn.disabled = true;
+      contentDiv.textContent = "Please select a module and chapter to view info.";
       return;
     }
-    contentDiv.textContent = "Loading...";
+    const chapters = uniqueArray(dataRows.filter(r => r.Module === moduleName).map(r => r.Chapters));
+    chapterSelect.innerHTML = `<option value="">-- Select Chapter --</option>`;
+    chapters.forEach(chap => {
+      chapterSelect.innerHTML += `<option value="${chap}">${chap}</option>`;
+    });
+    chapterSelect.disabled = false;
+    nextBtn.disabled = true;
+    contentDiv.textContent = "Please select a chapter to view info.";
+  }
+
+  // Clean keywords: split by semicolon, trim, remove years in parentheses
+  function parseKeywords(str) {
+    if (!str) return [];
+    return str
+      .split(';')
+      .map(s => s.trim().replace(/\(\d+\)/g, ''))
+      .filter(s => s.length > 0);
+  }
+
+  // Compose keywords from AuthorName, Important Keywords, Works columns
+  function composeKeywordList(row) {
+    const list = [];
+    if (row.AuthorName) list.push(row.AuthorName.trim());
+    if (row['Important Keywords']) {
+      list.push(...parseKeywords(row['Important Keywords']));
+    }
+    if (row.Works) {
+      list.push(...parseKeywords(row.Works));
+    }
+    // Deduplicate list
+    return uniqueArray(list);
+  }
+
+  // Fetch Wikipedia extract for given title
+  async function fetchWikipediaExtract(title) {
+    if (!title) return null;
+    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(title)}`;
     try {
-      const {title, extract} = await fetchWikipediaExtract(topic['WikiTitles']);
-      if (!title || !extract) {
-        contentDiv.textContent = "Could not find valid Wikipedia data for selected topic.";
+      const response = await fetch(url);
+      const data = await response.json();
+      const pages = data.query.pages;
+      const pageId = Object.keys(pages)[0];
+      if (pageId === "-1") return null;
+      return pages[pageId].extract || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Show random flash info for filtered rows in selected chapter
+  async function showRandomInfo() {
+    if (filteredRows.length === 0) {
+      contentDiv.textContent = "No data for selected module and chapter.";
+      nextBtn.disabled = true;
+      return;
+    }
+    let idx;
+    if (filteredRows.length === 1) {
+      idx = 0;
+    } else {
+      do {
+        idx = Math.floor(Math.random() * filteredRows.length);
+      } while (idx === lastIndex);
+    }
+    lastIndex = idx;
+    const row = filteredRows[idx];
+
+    const keywords = composeKeywordList(row);
+    if (keywords.length === 0) {
+      contentDiv.textContent = "No keywords found for the selected entry.";
+      return;
+    }
+    contentDiv.textContent = "Loading Wikipedia data...";
+    // Try fetching extracts from keywords, stop at first success
+    for (const kw of keywords) {
+      const extract = await fetchWikipediaExtract(kw);
+      if (extract) {
+        contentDiv.innerHTML = `
+          <img src="${row.ImageURL}" alt="${row.AuthorName}" class="thumb" />
+          <h2>${kw}</h2>
+          <p>${extract}</p>
+          <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(kw)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a></p>`;
+        nextBtn.disabled = false;
         return;
       }
-      contentDiv.innerHTML = `<h2>${title}</h2><p>${extract}</p><p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a></p>`;
-    } catch {
-      contentDiv.textContent = "Error fetching Wikipedia content. Please try again.";
     }
-  }
-
-  function randomIndexExcept(length, except) {
-    if (length <= 1) return 0;
-    let idx;
-    do {
-      idx = Math.floor(Math.random() * length);
-    } while (idx === except);
-    return idx;
-  }
-
-  // Handle chapter selection change
-  chapterSelect.addEventListener('change', () => {
-    const selectedChap = chapterSelect.value;
-    if (!selectedChap) {
-      contentDiv.textContent = "Please select a chapter or use search to start.";
-      nextBtn.disabled = true;
-      currentTopicList = [];
-      return;
-    }
-    currentTopicList = syllabusData.filter(row => row.Chapter === selectedChap);
-    lastIndex = -1;
-    showRandomInfo();
+    contentDiv.textContent = "No Wikipedia extract found for keywords.";
     nextBtn.disabled = false;
-    // Clear search input and results when selecting chapter
-    searchInput.value = '';
-    searchResults.style.display = 'none';
-    searchResults.innerHTML = '';
+  }
+
+  // EVENT LISTENERS
+
+  // Module select changed
+  moduleSelect.addEventListener('change', () => {
+    const mod = moduleSelect.value;
+    populateChapters(mod);
+    contentDiv.textContent = "Please select a chapter to view info.";
+    nextBtn.disabled = true;
+    filteredRows = [];
+    lastIndex = -1;
   });
 
+  // Chapter select changed
+  chapterSelect.addEventListener('change', () => {
+    const module = moduleSelect.value;
+    const chapter = chapterSelect.value;
+    if (module && chapter) {
+      filteredRows = dataRows.filter(r => r.Module === module && r.Chapters === chapter);
+      contentDiv.textContent = "Ready to show flash info. Click 'Show Another Random Info'.";
+      nextBtn.disabled = filteredRows.length === 0;
+      lastIndex = -1;
+    } else {
+      filteredRows = [];
+      contentDiv.textContent = "Please select a module and chapter to view info.";
+      nextBtn.disabled = true;
+      lastIndex = -1;
+    }
+  });
+
+  // Next button clicked to show random info
   nextBtn.addEventListener('click', () => {
     showRandomInfo();
   });
 
-
-  // Wikipedia Search API query
-  async function searchWikipedia(query) {
-    if (!query || query.length < 2) {
-      searchResults.style.display = 'none';
-      searchResults.innerHTML = '';
-      return [];
-    }
-    const url = 'https://en.wikipedia.org/w/api.php';
-    const params = new URLSearchParams({
-      action: 'query',
-      list: 'search',
-      srsearch: query,
-      format: 'json',
-      origin: '*'
+  // FETCH CSV AND INITIALIZE
+  fetch(csvUrl)
+    .then(r => r.text())
+    .then(text => {
+      dataRows = parseCSV(text);
+      populateModules();
+    })
+    .catch(() => {
+      contentDiv.textContent = "Failed to load syllabus data.";
+      moduleSelect.innerHTML = '<option>Error loading data</option>';
+      chapterSelect.innerHTML = '<option>Error loading data</option>';
+      nextBtn.disabled = true;
     });
-    try {
-      const response = await fetch(`${url}?${params.toString()}`);
-      const data = await response.json();
-      return data.query.search.map(item => ({
-        title: item.title,
-        snippet: item.snippet.replace(/<\/?span[^>]*>/g, '') // clean HTML tags for snippet
-      }));
-    } catch (err) {
-      console.error('Wikipedia search error:', err);
-      return [];
-    }
-  }
 
-  // Display search results under input box
-  function displaySearchResults(results) {
-    if (results.length === 0) {
-      searchResults.style.display = 'none';
-      searchResults.innerHTML = '';
-      return;
-    }
-    searchResults.innerHTML = results.map(item =>
-      `<div tabindex="0" role="button" aria-label="Select ${item.title}" data-title="${item.title}">
-        <strong>${item.title}</strong><br/>
-        <small>${item.snippet}</small>
-      </div>`
-    ).join('');
-    searchResults.style.display = 'block';
-  }
-
-  // Handle selection of a search result
-  searchResults.addEventListener('click', e => {
-    const target = e.target.closest('div[data-title]');
-    if (!target) return;
-    const title = target.getAttribute('data-title');
-    if (!title) return;
-    showExtractForTitle(title);
-    searchResults.style.display = 'none';
-    searchResults.innerHTML = '';
-    searchInput.value = title;
-    // Clear chapter selection when searching
-    chapterSelect.value = '';
-    currentTopicList = [];
-    nextBtn.disabled = true;
-  });
-
-  // Keyboard accessibility for search results
-  searchResults.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      e.target.click();
-    }
-  });
-
-  // Show Wikipedia extract for selected search title
-  async function showExtractForTitle(title) {
-    contentDiv.textContent = "Loading...";
-    try {
-      const extract = await fetchWikipediaExtractSingle(title);
-      if (!extract) {
-        contentDiv.textContent = `No Wikipedia extract found for "${title}".`;
-        return;
-      }
-      contentDiv.innerHTML = `<h2>${title}</h2><p>${extract}</p><p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a></p>`;
-    } catch {
-      contentDiv.textContent = "Error fetching Wikipedia content. Please try again.";
-    }
-  }
-
-  // Debounced input handler for search box
-  let searchTimeout = null;
-  searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(async () => {
-      const query = searchInput.value.trim();
-      const results = await searchWikipedia(query);
-      displaySearchResults(results);
-    }, 300);
-  });
-
-  // Hide search results if input loses focus (with delay to allow click)
-  searchInput.addEventListener('blur', () => {
-    setTimeout(() => {
-      searchResults.style.display = 'none';
-      searchResults.innerHTML = '';
-    }, 200);
-  });
 </script>
 
 </body>
