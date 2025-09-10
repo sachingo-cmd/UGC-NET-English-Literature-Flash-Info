@@ -167,21 +167,29 @@
   let lastIndex = -1;
   const shownKeywords = new Set();
 
+  // Map of Important Keywords per chapter (module|chapter)
   const chapterKeywordsMap = {
     "British Literature|Old & Middle English": [
       "Old & Middle English",
       "Anglo-Saxon",
       "Anglo-Norman"
     ],
+    // Add other chapters and keywords here as needed
   };
 
   function escapeRegex(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special characters for regex
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   function highlightKeyword(text, keyword) {
     const regex = new RegExp(`(${escapeRegex(keyword)})`, 'gi');
     return text.replace(regex, '<span class="highlight-red">$1</span>');
+  }
+
+  // Exclude authors with name starting with anonymous (case-insensitive, with optional year in parens)
+  function isAnonymousAuthor(name) {
+    if (!name) return false;
+    return /^anonymous(\s*\(\d+\))?$/i.test(name.trim());
   }
 
   function parseCSV(text) {
@@ -242,11 +250,12 @@
       .filter(s => s.length > 0);
   }
 
+  // Compose keyword list: chapter keywords + author name if not anonymous + works keywords
   function composeKeywordList(row) {
     const key = `${row.Module}|${row.Chapters}`;
     const chapterKw = chapterKeywordsMap[key] || [];
     const worksKw = row.Works ? parseKeywords(row.Works) : [];
-    const authorName = (row.AuthorName && row.AuthorName.toLowerCase() !== 'anonymous') ? [row.AuthorName.trim()] : [];
+    const authorName = isAnonymousAuthor(row.AuthorName) ? [] : [row.AuthorName.trim()];
     let combined = [...chapterKw, ...authorName, ...worksKw];
     return uniqueArray(combined);
   }
@@ -311,7 +320,7 @@
       }
     }
 
-    // Prepare source keywords line with keyword highlighted in red
+    // Show preview line with current keyword highlighted in red
     const sourceLine = `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`;
     previewDiv.innerHTML = highlightKeyword(sourceLine, candidates[0]);
 
