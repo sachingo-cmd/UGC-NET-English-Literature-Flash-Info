@@ -13,6 +13,7 @@
       --background: #f8f7f3;
       --text-color: #333333;
       --button-text-light: #ffffff;
+      --highlight-red: #d22;
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -128,6 +129,10 @@
     a:hover, a:focus {
       text-decoration: underline;
     }
+    .highlight-red {
+      color: var(--highlight-red);
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -169,6 +174,15 @@
       "Anglo-Norman"
     ],
   };
+
+  function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape special characters for regex
+  }
+
+  function highlightKeyword(text, keyword) {
+    const regex = new RegExp(`(${escapeRegex(keyword)})`, 'gi');
+    return text.replace(regex, '<span class="highlight-red">$1</span>');
+  }
 
   function parseCSV(text) {
     const lines = text.trim().split('\n');
@@ -278,7 +292,6 @@
     const candidates = composeKeywordList(row).filter(kw => !shownKeywords.has(kw));
 
     if (candidates.length === 0) {
-      // Try other rows similarly for unseen keywords
       for (let attempt = 0; attempt < filteredRows.length; attempt++) {
         let testRow = filteredRows[(idx + attempt) % filteredRows.length];
         const testKw = composeKeywordList(testRow).filter(kw => !shownKeywords.has(kw));
@@ -298,7 +311,9 @@
       }
     }
 
-    previewDiv.textContent = `Source Keywords: AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`;
+    // Prepare source keywords line with keyword highlighted in red
+    const sourceLine = `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`;
+    previewDiv.innerHTML = highlightKeyword(sourceLine, candidates[0]);
 
     contentDiv.textContent = "Loading Wikipedia data...";
     for (const kw of candidates) {
