@@ -2,16 +2,125 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>UGC NET English Literature Flash Info (Dynamic CSV)</title>
+  <title>UGC NET English Literature Flash Info</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 700px; margin: 2rem auto; padding: 1rem; }
-    select, button { padding: 0.5rem; font-size: 1rem; margin: 1rem 0; }
-    #content { border: 1px solid #ccc; padding: 1rem; min-height: 150px; background: #f9f9f9; }
-    a { color: #0077cc; }
+    /* Color palette */
+    :root {
+      --dark-red: #b8483c;       /* accent & headers */
+      --mustard: #b8a245;        /* highlights, buttons */
+      --charcoal: #3c393e;       /* background & text */
+      --sage: #a6bd9e;           /* card backgrounds */
+      --brown: #9c705d;          /* complementary accents */
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 700px;
+      margin: 2rem auto;
+      background-color: var(--charcoal);
+      color: #f0f0f0;
+      padding: 1rem;
+    }
+
+    h1 {
+      color: var(--dark-red);
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--mustard);
+    }
+
+    select, button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      margin: 0.5rem 0 1.5rem;
+      outline: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    select {
+      width: 100%;
+      background-color: var(--sage);
+      color: var(--charcoal);
+    }
+
+    select:focus {
+      box-shadow: 0 0 5px var(--mustard);
+    }
+
+    button {
+      background-color: var(--mustard);
+      color: var(--charcoal);
+      width: 100%;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #777;
+      cursor: not-allowed;
+      color: #bbb;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: var(--dark-red);
+      color: #fafafa;
+    }
+
+    #content {
+      background-color: var(--sage);
+      border-radius: 8px;
+      padding: 1.5rem;
+      min-height: 200px;
+      line-height: 1.5;
+      color: var(--charcoal);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      font-size: 1rem;
+      overflow-y: auto;
+      max-height: 500px;
+    }
+
+    h2 {
+      color: var(--dark-red);
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+      user-select: text;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      user-select: text;
+    }
+
+    a {
+      color: var(--dark-red);
+      font-weight: 600;
+      text-decoration: none;
+      user-select: text;
+    }
+
+    a:hover, a:focus {
+      text-decoration: underline;
+    }
+
   </style>
 </head>
 <body>
-  <h1>UGC NET English Literature Flash Info (Dynamic CSV)</h1>
+
+  <h1>UGC NET English Literature Flash Info</h1>
   <label for="chapterSelect">Select Chapter:</label>
   <select id="chapterSelect">
     <option value="">-- Loading chapters... --</option>
@@ -21,7 +130,6 @@
   <button id="nextBtn" disabled>Show Another Random Info</button>
 
   <script>
-    // Public CSV URL for syllabus data
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQVAyv3-UtQHUqoMbqDq92CcuSUO5tUEZl6DMg9OlD7cETGvgw5yyBGLJJdyyXDFCRmUW8ZbmzJRbH1/pub?output=csv';
 
     const chapterSelect = document.getElementById('chapterSelect');
@@ -32,24 +140,28 @@
     let currentTopicList = [];
     let lastIndex = -1;
 
-    // Simple CSV parser for this format
+    // CSV parser for your format
     function parseCSV(text) {
       const lines = text.trim().split('\n');
       const headers = lines[0].split(',').map(h => h.trim());
       return lines.slice(1).map(line => {
-        const cols = line.split(',').map(c => c.trim());
+        // Handle commas within wiki titles by splitting on first columns only
+        const parts = line.match(/("[^"]+"|[^,]+)(?=\s*,|\s*$)/g).map(s=>s.replace(/^"|"$/g,"").trim());
         let obj = {};
         headers.forEach((header, idx) => {
-          obj[header] = cols[idx];
+          obj[header] = parts[idx] || ''; 
         });
         return obj;
       });
     }
 
+    // Load syllabus
     fetch(csvUrl)
       .then(response => response.text())
       .then(text => {
         syllabusData = parseCSV(text);
+
+        // Get unique chapters
         const chapters = [...new Set(syllabusData.map(row => row.Chapter))];
         chapterSelect.innerHTML = '<option value="">-- Select a Chapter --</option>';
         chapters.forEach(chap => {
@@ -61,16 +173,27 @@
         contentDiv.textContent = 'Could not load syllabus data.';
       });
 
-    function fetchWikipediaExtract(title) {
+    // Fetch from Wikipedia api for one wiki title string
+    function fetchWikipediaExtractSingle(title) {
       const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(title)}`;
       return fetch(url)
         .then(response => response.json())
         .then(data => {
           const pages = data.query.pages;
           const pageId = Object.keys(pages)[0];
-          if (pageId === "-1") return `No Wikipedia page found for "${title}".`;
-          else return pages[pageId].extract || `No extract available for "${title}".`;
+          if (pageId === "-1") return null;
+          return pages[pageId].extract || null;
         });
+    }
+
+    // Pick one wiki title randomly and fetch its extract
+    async function fetchWikipediaExtract(titlesCsv) {
+      if (!titlesCsv) return 'No Wiki title provided.';
+      const titlesArray = titlesCsv.split(',').map(t => t.trim()).filter(t => t.length > 0);
+      if (titlesArray.length === 0) return 'No valid Wiki titles found.';
+      const randomTitle = titlesArray[Math.floor(Math.random() * titlesArray.length)];
+      const extract = await fetchWikipediaExtractSingle(randomTitle);
+      return {title: randomTitle, extract: extract || `No extract found for "${randomTitle}".`};
     }
 
     function randomIndexExcept(length, except) {
@@ -86,13 +209,13 @@
       if (!currentTopicList.length) return;
       const idx = randomIndexExcept(currentTopicList.length, lastIndex);
       lastIndex = idx;
-      const topic = currentTopicList[idx]['Wiki Title'];
+      const topic = currentTopicList[idx];
       contentDiv.textContent = "Loading...";
       try {
-        const extract = await fetchWikipediaExtract(topic);
-        contentDiv.innerHTML = `<h2>${topic}</h2><p>${extract}</p><p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(topic)}" target="_blank">Read more on Wikipedia</a></p>`;
+        const {title, extract} = await fetchWikipediaExtract(topic['Wiki Titles']);
+        contentDiv.innerHTML = `<h2>${title}</h2><p>${extract}</p><p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a></p>`;
       } catch {
-        contentDiv.textContent = "Error fetching Wikipedia data. Please try again.";
+        contentDiv.textContent = "Error fetching Wikipedia content. Please try again.";
       }
     }
 
@@ -114,5 +237,6 @@
       showRandomInfo();
     });
   </script>
+
 </body>
 </html>
