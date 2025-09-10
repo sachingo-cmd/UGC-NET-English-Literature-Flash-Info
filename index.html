@@ -74,6 +74,18 @@
       background-color: var(--dark-red);
       border-color: var(--dark-red);
     }
+    #preview {
+      font-size: 0.85rem;
+      color: #555;
+      border-bottom: 1px solid var(--sage);
+      margin-bottom: 0.6rem;
+      padding-bottom: 0.3rem;
+      font-family: monospace, monospace;
+      white-space: pre-wrap;
+      user-select: text;
+      max-height: 70px;
+      overflow: auto;
+    }
     #content {
       background-color: var(--sage);
       border-radius: 8px;
@@ -84,7 +96,7 @@
       font-size: 1rem;
       box-shadow: 0 4px 8px rgba(60, 57, 62, 0.15);
       overflow-y: auto;
-      max-height: 500px;
+      max-height: 430px;
       user-select: text;
       position: relative;
     }
@@ -132,6 +144,7 @@
   <option value="">-- Select module first --</option>
 </select>
 
+<div id="preview">Select module and chapter to see keyword info source.</div>
 <div id="content">Please select a module and chapter to view info.</div>
 <button id="nextBtn" disabled>Show Another Random Info</button>
 
@@ -141,6 +154,7 @@
   const moduleSelect = document.getElementById('moduleSelect');
   const chapterSelect = document.getElementById('chapterSelect');
   const contentDiv = document.getElementById('content');
+  const previewDiv = document.getElementById('preview');
   const nextBtn = document.getElementById('nextBtn');
 
   let dataRows = [];
@@ -148,14 +162,12 @@
   let lastIndex = -1;
   const shownKeywords = new Set();
 
-  // Map of Important Keywords per chapter
   const chapterKeywordsMap = {
     "British Literature|Old & Middle English": [
       "Old & Middle English",
       "Anglo-Saxon",
       "Anglo-Norman"
     ],
-    // Add more keys and keywords as needed
   };
 
   function parseCSV(text) {
@@ -184,6 +196,7 @@
     chapterSelect.innerHTML = `<option value="">-- Select Module first --</option>`;
     chapterSelect.disabled = true;
     nextBtn.disabled = true;
+    previewDiv.textContent = "Select module and chapter to see keyword info source.";
     contentDiv.textContent = "Please select a module and chapter to view info.";
   }
 
@@ -192,6 +205,7 @@
       chapterSelect.innerHTML = `<option value="">-- Select Module first --</option>`;
       chapterSelect.disabled = true;
       nextBtn.disabled = true;
+      previewDiv.textContent = "Select module and chapter to see keyword info source.";
       contentDiv.textContent = "Please select a module and chapter to view info.";
       return;
     }
@@ -202,6 +216,7 @@
     });
     chapterSelect.disabled = false;
     nextBtn.disabled = true;
+    previewDiv.textContent = "Select chapter to see keyword info source.";
     contentDiv.textContent = "Please select a chapter to view info.";
   }
 
@@ -239,6 +254,7 @@
 
   async function showRandomInfo() {
     if (filteredRows.length === 0) {
+      previewDiv.textContent = "";
       contentDiv.textContent = "No data for selected module and chapter.";
       nextBtn.disabled = true;
       return;
@@ -250,6 +266,7 @@
       idx = Math.floor(Math.random() * filteredRows.length);
       tries++;
       if (tries > 20) {
+        previewDiv.textContent = "";
         contentDiv.textContent = "No new unique information available for today.";
         nextBtn.disabled = true;
         return;
@@ -258,16 +275,14 @@
 
     lastIndex = idx;
     const row = filteredRows[idx];
-    // Get keywords excluding already shown
     const candidates = composeKeywordList(row).filter(kw => !shownKeywords.has(kw));
 
     if (candidates.length === 0) {
-      // Try other rows iteratively for unseen keywords
+      // Try other rows similarly for unseen keywords
       for (let attempt = 0; attempt < filteredRows.length; attempt++) {
         let testRow = filteredRows[(idx + attempt) % filteredRows.length];
         const testKw = composeKeywordList(testRow).filter(kw => !shownKeywords.has(kw));
         if (testKw.length > 0) {
-          // Found new keywords from another row, reset keyword candidates and row
           idx = (idx + attempt) % filteredRows.length;
           lastIndex = idx;
           filteredRows[idx] = testRow;
@@ -276,33 +291,31 @@
         }
       }
       if (candidates.length === 0) {
+        previewDiv.textContent = "";
         contentDiv.textContent = "No new unique information left for today in this chapter.";
         nextBtn.disabled = true;
         return;
       }
     }
 
-    contentDiv.textContent = "Loading Wikipedia data...";
+    previewDiv.textContent = `Source Keywords: AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`;
 
-    // Fetch extract from first new keyword with extract
+    contentDiv.textContent = "Loading Wikipedia data...";
     for (const kw of candidates) {
       const extract = await fetchWikipediaExtract(kw);
       if (extract) {
         shownKeywords.add(kw);
-        const rowUsed = filteredRows[idx];
         contentDiv.innerHTML = `
-          <img src="${rowUsed.ImageURL}" alt="${rowUsed.AuthorName || 'Image'}" class="thumb" />
+          <img src="${row.ImageURL}" alt="${row.AuthorName || 'Image'}" class="thumb" />
           <h2>${kw}</h2>
           <p>${extract}</p>
           <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(kw)}" target="_blank">Read more on Wikipedia</a></p>`;
         nextBtn.disabled = false;
         return;
       } else {
-        shownKeywords.add(kw); // Avoid retrying this kw
+        shownKeywords.add(kw);
       }
     }
-
-    // None successful
     contentDiv.textContent = "No Wikipedia extract found for available keywords.";
     nextBtn.disabled = false;
   }
@@ -310,6 +323,7 @@
   moduleSelect.addEventListener('change', () => {
     const mod = moduleSelect.value;
     populateChapters(mod);
+    previewDiv.textContent = "Select chapter to see keyword info source.";
     contentDiv.textContent = "Please select a chapter to view info.";
     nextBtn.disabled = true;
     filteredRows = [];
@@ -322,12 +336,14 @@
     const chap = chapterSelect.value;
     if (mod && chap) {
       filteredRows = dataRows.filter(r => r.Module === mod && r.Chapters === chap);
+      previewDiv.textContent = "";
       contentDiv.textContent = "Ready. Click 'Show Another Random Info'.";
       nextBtn.disabled = filteredRows.length === 0;
       lastIndex = -1;
       shownKeywords.clear();
     } else {
       filteredRows = [];
+      previewDiv.textContent = "";
       contentDiv.textContent = "Please select a module and chapter to view info.";
       nextBtn.disabled = true;
       lastIndex = -1;
@@ -344,6 +360,7 @@
       populateModules();
     })
     .catch(() => {
+      previewDiv.textContent = "";
       contentDiv.textContent = "Failed to load data.";
       moduleSelect.innerHTML = '<option>Error loading data</option>';
       chapterSelect.innerHTML = '<option>Error loading data</option>';
