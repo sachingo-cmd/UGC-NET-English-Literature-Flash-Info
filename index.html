@@ -3,22 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <title>UGC NET English Literature Flash Info</title>
+  <link rel="icon" type="image/png" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Wikipedia-logo-v2-en.svg/32px-Wikipedia-logo-v2-en.svg.png" />
   <style>
-    /* Color palette */
+    /* Light-themed colors based on your palette */
     :root {
-      --dark-red: #b8483c;       /* accent & headers */
-      --mustard: #b8a245;        /* highlights, buttons */
-      --charcoal: #3c393e;       /* background & text */
-      --sage: #a6bd9e;           /* card backgrounds */
-      --brown: #9c705d;          /* complementary accents */
+      --dark-red: #b8483c;
+      --mustard: #b8a245;
+      --charcoal: #3c393e;
+      --sage: #a6bd9e;
+      --brown: #9c705d;
+      --background: #f8f7f3;
+      --text-color: #333333;
+      --button-text-light: #ffffff;
     }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       max-width: 700px;
       margin: 2rem auto;
-      background-color: var(--charcoal);
-      color: #f0f0f0;
+      background-color: var(--background);
+      color: var(--text-color);
       padding: 1rem;
     }
 
@@ -27,7 +31,7 @@
       font-weight: bold;
       text-align: center;
       margin-bottom: 1.5rem;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+      text-shadow: 1px 1px 2px rgba(200, 200, 200, 0.6);
     }
 
     label {
@@ -40,43 +44,47 @@
     select, button {
       padding: 0.5rem 1rem;
       font-size: 1rem;
-      border: none;
-      border-radius: 5px;
+      border: 2px solid var(--sage);
+      border-radius: 6px;
       margin: 0.5rem 0 1.5rem;
       outline: none;
       cursor: pointer;
       font-weight: 600;
-      transition: background-color 0.3s ease;
       user-select: none;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     select {
       width: 100%;
-      background-color: var(--sage);
-      color: var(--charcoal);
+      background-color: #ffffff;
+      color: var(--text-color);
     }
 
     select:focus {
+      border-color: var(--mustard);
       box-shadow: 0 0 5px var(--mustard);
     }
 
     button {
       background-color: var(--mustard);
-      color: var(--charcoal);
+      color: var(--button-text-light);
       width: 100%;
       font-size: 1.2rem;
       cursor: pointer;
+      border-color: var(--mustard);
     }
 
     button:disabled {
-      background-color: #777;
+      background-color: #cccccc;
       cursor: not-allowed;
-      color: #bbb;
+      color: #666666;
+      border-color: #cccccc;
     }
 
     button:hover:not(:disabled) {
       background-color: var(--dark-red);
-      color: #fafafa;
+      border-color: var(--dark-red);
+      color: var(--button-text-light);
     }
 
     #content {
@@ -84,38 +92,35 @@
       border-radius: 8px;
       padding: 1.5rem;
       min-height: 200px;
-      line-height: 1.5;
+      line-height: 1.6;
       color: var(--charcoal);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 8px rgba(60, 57, 62, 0.2);
       font-size: 1rem;
       overflow-y: auto;
       max-height: 500px;
+      user-select: text;
     }
 
     h2 {
       color: var(--dark-red);
       margin-top: 0;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
       font-weight: 700;
-      user-select: text;
     }
 
     p {
       margin-bottom: 1rem;
-      user-select: text;
     }
 
     a {
       color: var(--dark-red);
       font-weight: 600;
       text-decoration: none;
-      user-select: text;
     }
 
     a:hover, a:focus {
       text-decoration: underline;
     }
-
   </style>
 </head>
 <body>
@@ -140,28 +145,47 @@
     let currentTopicList = [];
     let lastIndex = -1;
 
-    // CSV parser for your format
+    // Improved CSV parser (handles quoted fields)
     function parseCSV(text) {
       const lines = text.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
+      const headers = parseCSVLine(lines[0]);
       return lines.slice(1).map(line => {
-        // Handle commas within wiki titles by splitting on first columns only
-        const parts = line.match(/("[^"]+"|[^,]+)(?=\s*,|\s*$)/g).map(s=>s.replace(/^"|"$/g,"").trim());
+        const fields = parseCSVLine(line);
         let obj = {};
         headers.forEach((header, idx) => {
-          obj[header] = parts[idx] || ''; 
+          obj[header] = fields[idx] || '';
         });
         return obj;
       });
     }
 
-    // Load syllabus
+    // Parses one CSV line, handling quoted commas
+    function parseCSVLine(line) {
+      let fields = [];
+      let field = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        let c = line[i];
+        if (c === '"' ) {
+          inQuotes = !inQuotes;
+          continue;
+        }
+        if (c === ',' && !inQuotes) {
+          fields.push(field);
+          field = '';
+        } else {
+          field += c;
+        }
+      }
+      fields.push(field);
+      return fields.map(f => f.trim());
+    }
+
     fetch(csvUrl)
       .then(response => response.text())
       .then(text => {
         syllabusData = parseCSV(text);
 
-        // Get unique chapters
         const chapters = [...new Set(syllabusData.map(row => row.Chapter))];
         chapterSelect.innerHTML = '<option value="">-- Select a Chapter --</option>';
         chapters.forEach(chap => {
@@ -173,8 +197,7 @@
         contentDiv.textContent = 'Could not load syllabus data.';
       });
 
-    // Fetch from Wikipedia api for one wiki title string
-    function fetchWikipediaExtractSingle(title) {
+    async function fetchWikipediaExtractSingle(title) {
       const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(title)}`;
       return fetch(url)
         .then(response => response.json())
@@ -186,7 +209,6 @@
         });
     }
 
-    // Pick one wiki title randomly and fetch its extract
     async function fetchWikipediaExtract(titlesCsv) {
       if (!titlesCsv) return 'No Wiki title provided.';
       const titlesArray = titlesCsv.split(',').map(t => t.trim()).filter(t => t.length > 0);
@@ -210,9 +232,17 @@
       const idx = randomIndexExcept(currentTopicList.length, lastIndex);
       lastIndex = idx;
       const topic = currentTopicList[idx];
+      if (!topic['Wiki Titles']) {
+        contentDiv.textContent = "No Wiki Titles available for this topic.";
+        return;
+      }
       contentDiv.textContent = "Loading...";
       try {
         const {title, extract} = await fetchWikipediaExtract(topic['Wiki Titles']);
+        if (!title || !extract) {
+          contentDiv.textContent = "Could not find valid Wikipedia data for selected topic.";
+          return;
+        }
         contentDiv.innerHTML = `<h2>${title}</h2><p>${extract}</p><p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a></p>`;
       } catch {
         contentDiv.textContent = "Error fetching Wikipedia content. Please try again.";
@@ -237,6 +267,5 @@
       showRandomInfo();
     });
   </script>
-
 </body>
 </html>
