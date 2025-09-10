@@ -320,9 +320,11 @@
       }
     }
 
-    // Show preview line with current keyword highlighted in red
-    const sourceLine = `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`;
-    previewDiv.innerHTML = highlightKeyword(sourceLine, candidates[0]);
+    // Highlight the exact keyword that will be used to fetch content
+    previewDiv.innerHTML = highlightKeyword(
+      `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
+      candidates[0]
+    );
 
     contentDiv.textContent = "Loading Wikipedia data...";
     for (const kw of candidates) {
