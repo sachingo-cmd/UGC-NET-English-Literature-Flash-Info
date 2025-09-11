@@ -346,13 +346,8 @@
 
   let chapterKeywordsMap = {};
 
-  // Bookmarks: store in localStorage under this key
   const BOOKMARKS_STORAGE_KEY = 'ugcnet_flash_bookmarks';
-
-  // Theme: store in localStorage under this key
   const THEME_STORAGE_KEY = 'ugcnet_flash_theme';
-
-  // -------------------- Utility functions -----------------------
 
   function escapeRegex(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -390,7 +385,6 @@
     return [...new Set(arr.filter(s => s && s.length > 0))];
   }
 
-  // Build chapter-level Important Keywords map scanning all rows
   function buildChapterKeywordsMap(dataRows) {
     const map = {};
     dataRows.forEach(row => {
@@ -402,7 +396,47 @@
     return map;
   }
 
-  // Compose keyword list: chapter keywords + author name + works keywords
+  function populateModules() {
+    const modules = uniqueArray(dataRows.map(r => r.Module));
+    moduleSelect.innerHTML = '<option value="">-- Select Module --</option>';
+    modules.forEach(mod => {
+      moduleSelect.innerHTML += `<option value="${mod}">${mod}</option>`;
+    });
+    chapterSelect.innerHTML = `<option value="">-- Select Module first --</option>`;
+    chapterSelect.disabled = true;
+    nextBtn.disabled = true;
+    previewDiv.textContent = "Select module and chapter to see keyword info source.";
+    contentDiv.textContent = "Please select a module and chapter to view info.";
+  }
+
+  function populateChapters(moduleName) {
+    if (!moduleName) {
+      chapterSelect.innerHTML = `<option value="">-- Select Module first --</option>`;
+      chapterSelect.disabled = true;
+      nextBtn.disabled = true;
+      previewDiv.textContent = "Select module and chapter to see keyword info source.";
+      contentDiv.textContent = "Please select a module and chapter to view info.";
+      return;
+    }
+    const chapters = uniqueArray(dataRows.filter(r => r.Module === moduleName).map(r => r.Chapters));
+    chapterSelect.innerHTML = `<option value="">-- Select Chapter --</option>`;
+    chapters.forEach(chap => {
+      chapterSelect.innerHTML += `<option value="${chap}">${chap}</option>`;
+    });
+    chapterSelect.disabled = false;
+    nextBtn.disabled = true;
+    previewDiv.textContent = "Select chapter to see keyword info source.";
+    contentDiv.textContent = "Please select a chapter to view info.";
+  }
+
+  function parseKeywords(str) {
+    if (!str) return [];
+    return str
+      .split(';')
+      .map(s => s.trim().replace(/\(\d+\)/g, ''))
+      .filter(s => s.length > 0);
+  }
+
   function composeKeywordList(row) {
     const key = `${row.Module}|${row.Chapters}`;
     const chapterKw = chapterKeywordsMap[key]
@@ -415,7 +449,6 @@
     return uniqueArray(combined);
   }
 
-  // Fetch Wikipedia extract with fallback for apostrophes
   async function fetchWikipediaExtract(title) {
     if (!title) return null;
     const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(title)}`;
@@ -428,7 +461,6 @@
       const extract = pages[pageId].extract || null;
       if (extract) return extract;
 
-      // Fallback: try without apostrophe
       const altTitle = title.replace(/’|'/g, '').trim();
       if (altTitle !== title) {
         const altUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(altTitle)}`;
@@ -445,8 +477,6 @@
       return null;
     }
   }
-
-  // ---------------- Bookmarking -------------------
 
   function getBookmarks() {
     try {
@@ -470,7 +500,7 @@
     let bookmarks = getBookmarks();
     const index = bookmarks.findIndex(b => b.id === id && b.keyword === keyword);
     if (index >= 0) {
-      bookmarks.splice(index, 1); // remove bookmark
+      bookmarks.splice(index, 1);
     } else {
       bookmarks.push({ id, keyword, row, extract });
     }
@@ -514,8 +544,6 @@
     }
   });
 
-  // ---------------- Theme Handling ----------------
-
   function applyTheme(theme) {
     if (theme === 'dark') {
       document.body.classList.add('dark');
@@ -532,11 +560,8 @@
     applyTheme(newTheme);
   });
 
-  // Initialize theme from localStorage
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
   applyTheme(savedTheme);
-
-  // ------------------ Main Logic -------------------
 
   function filterRowsBySearch(rows, searchTerm) {
     if (!searchTerm) return rows;
@@ -567,7 +592,6 @@
     document.getElementById('bookmarkBtn').addEventListener('click', () => {
       toggleBookmark(row.ID, keyword, row, extract);
       renderBookmarks();
-      // Update button label
       document.getElementById('bookmarkBtn').textContent = isBookmarked(row.ID, keyword) ? 'Remove Bookmark' : 'Add Bookmark';
     });
   }
@@ -598,7 +622,6 @@
     const candidates = composeKeywordList(row).filter(kw => !shownKeywords.has(kw));
 
     if (candidates.length === 0) {
-      // Try other rows for unseen keywords
       for (let attempt = 0; attempt < filteredRows.length; attempt++) {
         let testRow = filteredRows[(idx + attempt) % filteredRows.length];
         const testKw = composeKeywordList(testRow).filter(kw => !shownKeywords.has(kw));
@@ -680,11 +703,9 @@
     }
   });
 
-  // Search input filtering
   searchInput.addEventListener('input', () => {
     const searchTerm = searchInput.value.trim().toLowerCase();
     if (!searchTerm) {
-      // reset filter to current chapter module combo
       if (moduleSelect.value && chapterSelect.value) {
         filteredRows = dataRows.filter(r => r.Module === moduleSelect.value && r.Chapters === chapterSelect.value);
         nextBtn.disabled = filteredRows.length === 0;
@@ -714,7 +735,6 @@
 
   nextBtn.addEventListener('click', showRandomInfo);
 
-  // CSV load and map build
   fetch(csvUrl)
     .then(res => res.text())
     .then(text => {
