@@ -242,6 +242,8 @@
     contentDiv.textContent = "Please select a chapter to view info.";
   }
 
+  // Only remove parentheses with digits (years), preserve others like (poem)
+  // Trim spaces from keywords
   function parseKeywords(str) {
     if (!str) return [];
     return str
@@ -250,7 +252,7 @@
       .filter(s => s.length > 0);
   }
 
-  // Compose keyword list: chapter keywords + author name if not anonymous + works keywords
+  // Compose keyword list: chapter keywords + author name (if not anonymous) + works keywords
   function composeKeywordList(row) {
     const key = `${row.Module}|${row.Chapters}`;
     const chapterKw = chapterKeywordsMap[key] || [];
@@ -320,30 +322,40 @@
       }
     }
 
-    // Highlight the exact keyword that will be used to fetch content
+    // We don't know which keyword will succeed yet, highlight first candidate initially for error message clarity
     previewDiv.innerHTML = highlightKeyword(
       `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
       candidates[0]
     );
 
     contentDiv.textContent = "Loading Wikipedia data...";
+    let successKeyword = null;
     for (const kw of candidates) {
       const extract = await fetchWikipediaExtract(kw);
       if (extract) {
+        successKeyword = kw;
         shownKeywords.add(kw);
-        contentDiv.innerHTML = `
-          <img src="${row.ImageURL}" alt="${row.AuthorName || 'Image'}" class="thumb" />
-          <h2>${kw}</h2>
-          <p>${extract}</p>
-          <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(kw)}" target="_blank">Read more on Wikipedia</a></p>`;
-        nextBtn.disabled = false;
-        return;
+        break;
       } else {
         shownKeywords.add(kw);
       }
     }
-    contentDiv.textContent = "No Wikipedia extract found for available keywords.";
-    nextBtn.disabled = false;
+
+    if (successKeyword) {
+      previewDiv.innerHTML = highlightKeyword(
+        `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
+        successKeyword
+      );
+      contentDiv.innerHTML = `
+        <img src="${row.ImageURL}" alt="${row.AuthorName || 'Image'}" class="thumb" />
+        <h2>${successKeyword}</h2>
+        <p>${await fetchWikipediaExtract(successKeyword)}</p>
+        <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(successKeyword)}" target="_blank">Read more on Wikipedia</a></p>`;
+      nextBtn.disabled = false;
+    } else {
+      contentDiv.textContent = "No Wikipedia extract found for available keywords.";
+      nextBtn.disabled = false;
+    }
   }
 
   moduleSelect.addEventListener('change', () => {
