@@ -15,16 +15,6 @@
       --text-color: #333333;
       --button-text-light: #ffffff;
       --highlight-red: #d22;
-
-      --bg-light: #f8f7f3;
-      --txt-light: #333333;
-      --bg-dark: #1a1a1a;
-      --txt-dark: #ddd;
-      --dark-red-dark: #a6342b;
-      --mustard-dark: #ab9937;
-      --charcoal-dark: #979797;
-      --sage-dark: #789178;
-      --brown-dark: #754f41;
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -33,22 +23,38 @@
       background-color: var(--background);
       color: var(--text-color);
       padding: 1rem;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    body.dark {
-      background-color: var(--bg-dark);
-      color: var(--txt-dark);
     }
     h1 {
       color: var(--dark-red);
       font-weight: bold;
       text-align: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
       text-shadow: 1px 1px 2px rgba(200, 200, 200, 0.6);
-      transition: color 0.3s ease;
     }
-    body.dark h1 {
-      color: var(--dark-red-dark);
+    #otherAppBtn {
+      display: block;
+      margin: 0 auto 1rem auto;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--button-text-light);
+      background-color: var(--mustard);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      width: fit-content;
+      user-select: none;
+      box-shadow: 0 2px 6px rgba(184, 162, 69, 0.7);
+      text-decoration: none;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    #otherAppBtn:hover, #otherAppBtn:focus {
+      background-color: var(--dark-red);
+      box-shadow: 0 4px 10px rgba(184, 162, 69, 0.85);
+      outline: none;
+      text-decoration: none;
+      color: var(--button-text-light);
     }
     label {
       display: block;
@@ -56,10 +62,6 @@
       margin-bottom: 0.5rem;
       color: var(--mustard);
       user-select: none;
-      transition: color 0.3s ease;
-    }
-    body.dark label {
-      color: var(--mustard-dark);
     }
     select, button, #searchInput {
       padding: 0.5rem 1rem;
@@ -76,11 +78,6 @@
       transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
       background-color: #fff;
       color: var(--text-color);
-    }
-    body.dark select, body.dark button, body.dark #searchInput {
-      border-color: var(--sage-dark);
-      background-color: #222;
-      color: var(--txt-dark);
     }
     select:focus, #searchInput:focus {
       border-color: var(--mustard);
@@ -101,15 +98,6 @@
       background-color: var(--dark-red);
       border-color: var(--dark-red);
     }
-    body.dark button {
-      background-color: var(--mustard-dark);
-      color: var(--button-text-light);
-      border-color: var(--mustard-dark);
-    }
-    body.dark button:hover:not(:disabled) {
-      background-color: var(--dark-red-dark);
-      border-color: var(--dark-red-dark);
-    }
     #preview {
       font-size: 0.85rem;
       color: #555;
@@ -121,11 +109,6 @@
       user-select: text;
       max-height: 70px;
       overflow: auto;
-      transition: color 0.3s ease, border-color 0.3s ease;
-    }
-    body.dark #preview {
-      color: var(--charcoal-dark);
-      border-color: var(--sage-dark);
     }
     #content {
       background-color: var(--sage);
@@ -140,22 +123,12 @@
       max-height: 430px;
       user-select: text;
       position: relative;
-      transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
-    }
-    body.dark #content {
-      background-color: #374c38;
-      color: var(--charcoal-dark);
-      box-shadow: 0 4px 8px rgba(120, 120, 120, 0.3);
     }
     h2 {
       color: var(--dark-red);
       margin-top: 0;
       margin-bottom: 0.5rem;
       font-weight: 700;
-      transition: color 0.3s ease;
-    }
-    body.dark h2 {
-      color: var(--dark-red-dark);
     }
     p {
       margin-bottom: 1rem;
@@ -170,19 +143,11 @@
       box-shadow: 1px 1px 4px #8884;
       max-width: 100%;
       height: auto;
-      transition: border-color 0.3s ease;
-    }
-    body.dark img.thumb {
-      border-color: var(--brown-dark);
     }
     a {
       color: var(--dark-red);
       font-weight: 600;
       text-decoration: none;
-      transition: color 0.3s ease;
-    }
-    body.dark a {
-      color: var(--dark-red-dark);
     }
     a:hover, a:focus {
       text-decoration: underline;
@@ -201,7 +166,7 @@
         font-size: 1.5rem;
         margin-bottom: 1rem;
       }
-      select, button, #searchInput {
+      select, button, #searchInput, #otherAppBtn {
         font-size: 0.9rem;
         padding: 0.5rem;
       }
@@ -221,77 +186,13 @@
         max-height: 120px;
       }
     }
-    /* Bookmark modal overlay */
-    #bookmarkModalOverlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-    #bookmarkModalOverlay.active {
-      display: flex;
-    }
-    #bookmarkModal {
-      background-color: var(--background);
-      color: var(--text-color);
-      padding: 1rem 1.5rem;
-      border-radius: 10px;
-      max-width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 0 10px #0008;
-      position: relative;
-      font-size: 0.9rem;
-    }
-    body.dark #bookmarkModal {
-      background-color: #222;
-      color: var(--txt-dark);
-      box-shadow: 0 0 20px #000f;
-    }
-    #bookmarkModal h3 {
-      margin-top: 0;
-      margin-bottom: 1rem;
-      font-weight: 700;
-      font-size: 1.25rem;
-      color: var(--dark-red);
-    }
-    #bookmarkCloseBtn {
-      position: absolute;
-      top: 0.3rem;
-      right: 0.5rem;
-      background: transparent;
-      border: none;
-      font-size: 1.5rem;
-      color: var(--dark-red);
-      cursor: pointer;
-      font-weight: 700;
-      transition: color 0.3s ease;
-    }
-    #bookmarkCloseBtn:hover {
-      color: var(--mustard);
-    }
-    #bookmarkList .bookmarkCard {
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--sage);
-    }
-    body.dark #bookmarkList .bookmarkCard {
-      border-color: var(--sage-dark);
-    }
-    #bookmarkList .bookmarkCard h4 {
-      margin: 0 0 0.3rem 0;
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--dark-red);
-    }
   </style>
 </head>
 <body>
 
 <h1>UGC NET English Literature Flash Info</h1>
+
+<a href="https://sachingo-cmd.github.io/LitFlashcard/" target="_blank" rel="noopener noreferrer" id="otherAppBtn" aria-label="Go to LitFlashcard App">Go to LitFlashcard App</a>
 
 <label for="moduleSelect">Select Module</label>
 <select id="moduleSelect" aria-label="Select Module">
@@ -311,19 +212,6 @@
 
 <button id="nextBtn" disabled aria-label="Show another random info">Show Another Random Info</button>
 
-<button id="bookmarkToggleBtn" aria-label="View bookmarked flash info">Bookmarks</button>
-
-<!-- Bookmark modal -->
-<div id="bookmarkModalOverlay" role="dialog" aria-modal="true" aria-labelledby="bookmarkModalTitle">
-  <div id="bookmarkModal">
-    <button id="bookmarkCloseBtn" aria-label="Close bookmarks modal">&times;</button>
-    <h3 id="bookmarkModalTitle">Bookmarked Flash Info</h3>
-    <div id="bookmarkList"></div>
-  </div>
-</div>
-
-<button id="themeToggleBtn" aria-label="Toggle light/dark mode" style="margin-top:1em; padding:0.5em 1em;">Toggle Dark Mode</button>
-
 <script>
   const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7cWnraaDNjm3MW4tUeVrVftj6iEBYwNkGZ7WsJsQfte3rbRhr1AF43fbIyVe1-ZMtvRVZgDrwusrT/pub?output=csv';
 
@@ -333,11 +221,6 @@
   const contentDiv = document.getElementById('content');
   const previewDiv = document.getElementById('preview');
   const nextBtn = document.getElementById('nextBtn');
-  const bookmarkToggleBtn = document.getElementById('bookmarkToggleBtn');
-  const bookmarkModalOverlay = document.getElementById('bookmarkModalOverlay');
-  const bookmarkCloseBtn = document.getElementById('bookmarkCloseBtn');
-  const bookmarkList = document.getElementById('bookmarkList');
-  const themeToggleBtn = document.getElementById('themeToggleBtn');
 
   let dataRows = [];
   let filteredRows = [];
@@ -345,9 +228,6 @@
   const shownKeywords = new Set();
 
   let chapterKeywordsMap = {};
-
-  const BOOKMARKS_STORAGE_KEY = 'ugcnet_flash_bookmarks';
-  const THEME_STORAGE_KEY = 'ugcnet_flash_theme';
 
   function escapeRegex(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -478,123 +358,6 @@
     }
   }
 
-  function getBookmarks() {
-    try {
-      const saved = localStorage.getItem(BOOKMARKS_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function saveBookmarks(bookmarks) {
-    localStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify(bookmarks));
-  }
-
-  function isBookmarked(id, keyword) {
-    const bookmarks = getBookmarks();
-    return bookmarks.some(b => b.id === id && b.keyword === keyword);
-  }
-
-  function toggleBookmark(id, keyword, row, extract) {
-    let bookmarks = getBookmarks();
-    const index = bookmarks.findIndex(b => b.id === id && b.keyword === keyword);
-    if (index >= 0) {
-      bookmarks.splice(index, 1);
-    } else {
-      bookmarks.push({ id, keyword, row, extract });
-    }
-    saveBookmarks(bookmarks);
-  }
-
-  function renderBookmarks() {
-    const bookmarks = getBookmarks();
-    bookmarkList.innerHTML = '';
-    if (bookmarks.length === 0) {
-      bookmarkList.innerHTML = '<p>No bookmarks yet.</p>';
-      return;
-    }
-    bookmarks.forEach(b => {
-      const card = document.createElement('div');
-      card.className = 'bookmarkCard';
-      card.innerHTML = `<h4>${b.keyword}</h4>
-        <p><strong>Author:</strong> ${b.row.AuthorName || 'N/A'}</p>
-        <p><strong>Important Keywords:</strong> ${chapterKeywordsMap[`${b.row.Module}|${b.row.Chapters}`] || 'N/A'}</p>
-        <p><strong>Works:</strong> ${b.row.Works || 'N/A'}</p>
-        <p>${b.extract}</p>`;
-      bookmarkList.appendChild(card);
-    });
-  }
-
-  bookmarkToggleBtn.addEventListener('click', () => {
-    renderBookmarks();
-    bookmarkModalOverlay.classList.add('active');
-    bookmarkCloseBtn.focus();
-  });
-
-  bookmarkCloseBtn.addEventListener('click', () => {
-    bookmarkModalOverlay.classList.remove('active');
-    nextBtn.focus();
-  });
-
-  bookmarkModalOverlay.addEventListener('click', e => {
-    if (e.target === bookmarkModalOverlay) {
-      bookmarkModalOverlay.classList.remove('active');
-      nextBtn.focus();
-    }
-  });
-
-  function applyTheme(theme) {
-    if (theme === 'dark') {
-      document.body.classList.add('dark');
-      themeToggleBtn.textContent = 'Toggle Light Mode';
-    } else {
-      document.body.classList.remove('dark');
-      themeToggleBtn.textContent = 'Toggle Dark Mode';
-    }
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }
-
-  themeToggleBtn.addEventListener('click', () => {
-    const newTheme = document.body.classList.contains('dark') ? 'light' : 'dark';
-    applyTheme(newTheme);
-  });
-
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
-  applyTheme(savedTheme);
-
-  function filterRowsBySearch(rows, searchTerm) {
-    if (!searchTerm) return rows;
-    const lower = searchTerm.toLowerCase();
-    return rows.filter(row => {
-      return (
-        (row.AuthorName && row.AuthorName.toLowerCase().includes(lower)) ||
-        (row.Works && row.Works.toLowerCase().includes(lower)) ||
-        (chapterKeywordsMap[`${row.Module}|${row.Chapters}`] &&
-          chapterKeywordsMap[`${row.Module}|${row.Chapters}`].toLowerCase().includes(lower))
-      );
-    });
-  }
-
-  async function showFlashCard(row, keyword, extract) {
-    previewDiv.innerHTML = highlightKeyword(
-      `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${chapterKeywordsMap[`${row.Module}|${row.Chapters}`] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
-      keyword
-    );
-    contentDiv.innerHTML = `
-      <img src="${row.ImageURL}" alt="${row.AuthorName || 'Image'}" class="thumb" />
-      <h2>${keyword}</h2>
-      <p>${extract}</p>
-      <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(keyword)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a></p>
-      <button id="bookmarkBtn" aria-label="Toggle bookmark for this flash info">${isBookmarked(row.ID, keyword) ? 'Remove Bookmark' : 'Add Bookmark'}</button>
-    `;
-
-    document.getElementById('bookmarkBtn').addEventListener('click', () => {
-      toggleBookmark(row.ID, keyword, row, extract);
-      renderBookmarks();
-      document.getElementById('bookmarkBtn').textContent = isBookmarked(row.ID, keyword) ? 'Remove Bookmark' : 'Add Bookmark';
-    });
-  }
 
   async function showRandomInfo() {
     if (filteredRows.length === 0) {
@@ -662,7 +425,15 @@
     }
 
     if (successKeyword && extract) {
-      showFlashCard(row, successKeyword, extract);
+      previewDiv.innerHTML = highlightKeyword(
+        `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${chapterKeywordsMap[`${row.Module}|${row.Chapters}`] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
+        successKeyword
+      );
+      contentDiv.innerHTML = `
+        <img src="${row.ImageURL}" alt="${row.AuthorName || 'Image'}" class="thumb" />
+        <h2>${successKeyword}</h2>
+        <p>${extract}</p>
+        <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(successKeyword)}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a></p>`;
       nextBtn.disabled = false;
     } else {
       contentDiv.textContent = "No Wikipedia extract found for available keywords.";
