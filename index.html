@@ -186,7 +186,13 @@
     return text.replace(regex, '<span class="highlight-red">$1</span>');
   }
 
-  // Exclude authors with name starting with anonymous (case-insensitive, with optional year in parens)
+  // Remove trailing parentheses containing digits or dashes from author names
+  function cleanAuthorName(name) {
+    if (!name) return '';
+    return name.trim().replace(/\s*\([\d– -]+\)\s*$/, '');
+  }
+
+  // Exclude authors named anonymous (alone or with year)
   function isAnonymousAuthor(name) {
     if (!name) return false;
     return /^anonymous(\s*\(\d+\))?$/i.test(name.trim());
@@ -242,8 +248,8 @@
     contentDiv.textContent = "Please select a chapter to view info.";
   }
 
-  // Only remove parentheses with digits (years), preserve others like (poem)
-  // Trim spaces from keywords
+  // Only remove parentheses containing digits (years), preserve others like (poem)
+  // Trim spaces from works keywords
   function parseKeywords(str) {
     if (!str) return [];
     return str
@@ -252,13 +258,14 @@
       .filter(s => s.length > 0);
   }
 
-  // Compose keyword list: chapter keywords + author name (if not anonymous) + works keywords
+  // Compose keyword list: chapter keywords + cleaned author name (if not anonymous) + works keywords
   function composeKeywordList(row) {
     const key = `${row.Module}|${row.Chapters}`;
     const chapterKw = chapterKeywordsMap[key] || [];
     const worksKw = row.Works ? parseKeywords(row.Works) : [];
-    const authorName = isAnonymousAuthor(row.AuthorName) ? [] : [row.AuthorName.trim()];
-    let combined = [...chapterKw, ...authorName, ...worksKw];
+    const cleanedAuthor = cleanAuthorName(row.AuthorName);
+    const authorName = isAnonymousAuthor(cleanedAuthor) || !cleanedAuthor ? [] : [cleanedAuthor];
+    const combined = [...chapterKw, ...authorName, ...worksKw];
     return uniqueArray(combined);
   }
 
@@ -322,7 +329,7 @@
       }
     }
 
-    // We don't know which keyword will succeed yet, highlight first candidate initially for error message clarity
+    // Initially highlight first candidate keyword for diagnostics
     previewDiv.innerHTML = highlightKeyword(
       `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
       candidates[0]
