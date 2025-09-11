@@ -167,15 +167,8 @@
   let lastIndex = -1;
   const shownKeywords = new Set();
 
-  // Map of Important Keywords per chapter (module|chapter)
-  const chapterKeywordsMap = {
-    "British Literature|Old & Middle English": [
-      "Old & Middle English",
-      "Anglo-Saxon",
-      "Anglo-Norman"
-    ],
-    // Add other chapters and keywords here as needed
-  };
+  // This will be built at load from your CSV!
+  let chapterKeywordsMap = {};
 
   function escapeRegex(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -213,6 +206,18 @@
 
   function uniqueArray(arr) {
     return [...new Set(arr.filter(s => s && s.length > 0))];
+  }
+
+  // Build chapter-level Important Keywords map scanning all rows
+  function buildChapterKeywordsMap(dataRows) {
+    const map = {};
+    dataRows.forEach(row => {
+      const key = `${row.Module}|${row.Chapters}`;
+      if (row["Important Keywords"] && row["Important Keywords"].trim() !== "" && !map[key]) {
+        map[key] = row["Important Keywords"];
+      }
+    });
+    return map;
   }
 
   function populateModules() {
@@ -258,10 +263,13 @@
       .filter(s => s.length > 0);
   }
 
-  // Compose keyword list: chapter keywords + cleaned author name (if not anonymous) + works keywords
+  // Compose keyword list: chapter keywords (from the map) + cleaned author name (if not anonymous) + works keywords
   function composeKeywordList(row) {
     const key = `${row.Module}|${row.Chapters}`;
-    const chapterKw = chapterKeywordsMap[key] || [];
+    // Use chapter-level important keywords, if present in map
+    const chapterKw = chapterKeywordsMap[key]
+      ? chapterKeywordsMap[key].split(';').map(s => s.trim()).filter(s => s.length > 0)
+      : [];
     const worksKw = row.Works ? parseKeywords(row.Works) : [];
     const cleanedAuthor = cleanAuthorName(row.AuthorName);
     const authorName = isAnonymousAuthor(cleanedAuthor) || !cleanedAuthor ? [] : [cleanedAuthor];
@@ -331,7 +339,7 @@
 
     // Initially highlight first candidate keyword for diagnostics
     previewDiv.innerHTML = highlightKeyword(
-      `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
+      `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${chapterKeywordsMap[`${row.Module}|${row.Chapters}`] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
       candidates[0]
     );
 
@@ -350,7 +358,7 @@
 
     if (successKeyword) {
       previewDiv.innerHTML = highlightKeyword(
-        `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${row['Important Keywords'] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
+        `AuthorName: ${row.AuthorName || 'N/A'}; Important Keywords: ${chapterKeywordsMap[`${row.Module}|${row.Chapters}`] || 'N/A'}; Works: ${row.Works || 'N/A'}`,
         successKeyword
       );
       contentDiv.innerHTML = `
@@ -398,10 +406,12 @@
 
   nextBtn.addEventListener('click', showRandomInfo);
 
+  // CSV load and map build
   fetch(csvUrl)
     .then(res => res.text())
     .then(text => {
       dataRows = parseCSV(text);
+      chapterKeywordsMap = buildChapterKeywordsMap(dataRows);
       populateModules();
     })
     .catch(() => {
